@@ -1,3 +1,5 @@
+from string import ascii_uppercase
+
 def similarDate(date1, date2) :
     '''
     two cases: 1- in same hour
@@ -26,13 +28,14 @@ def parseData(target):
         if not line:
             break
         #Parse
+        #----- year month day dayOfWeek ---------
         if(line[0] == '-') :
             splitLine=line.split(" ")
             #print(splitLine)
             date['year'] = int(splitLine[1][:len(splitLine[1])-1])
             date['month'] = int(splitLine[2][:len(splitLine[2])-1])
             date['day'] = int(splitLine[3][:len(splitLine[3])-1])
-            
+        #[name] [time] speech
         elif(line[0] == '[') :    
             splitLine = line.split(']')
             speech = line[len(splitLine[0]) + len(splitLine[1]) +2:].strip()
@@ -47,24 +50,24 @@ def parseData(target):
                 hour += 12
             elif am == '오전' and hour == 12 :
                 hour -= 12
-            #print(name + " " + time + ": " + words)
             date['hour'] = hour
             date['minute'] = minute
             newDate = {'year': date['year'], 'month' : date['month'], 'day': date['day'], 'hour' : hour, 'minute': minute}
             newData = {'name': name, 'date': newDate, 'speech': speech}
-            #print(date)
-            #print(newData)
             data.append(newData)
-            
-        #print(date)
     f.close()
     return data
-
+#groupData {ID: conversations: timeStarted: timeEnded: size:}
 def groupData(data) :
-    group = 'A'
+    groupedData = []
+    groupID = 0
     currDate = {'year': 0, 'month': 0, 'day': 0, 'hour': 0, 'minute': 0}
     for thisData in data :
-        thisData['date']
+        if not similarDate(currDate, thisData['date']) :
+            groupID += 1
+        
+        currDate = thisData['date']
+        groupedData[groupID]
 
 
 target = 'data2.txt'
