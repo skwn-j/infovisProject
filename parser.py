@@ -1,28 +1,13 @@
 from string import ascii_uppercase
-
-def similarDate(date1, date2) :
-    '''
-    two cases: 1- in same hour
-    2- in different hour
-    '''
-    if not((date2['minute'] - date1['minute'])%60 < 7) :
-        return False
-    if not((date2['hour'] - date1['hour'])%24 <= 1) :
-        return False
-    if not((date2['day'] - date1['day'])%30 <= 1) :
-        return False
-    if(date1['month'] != date2['month']) :
-        return False
-    if(date1['day'] != date2['day']) :
-        return False
-    if(date1['hour'] != date2['hour']) :
-        return False
+import datetime
     
 
 def parseData(target):
     f = open(target, encoding="utf-8")
     data = []
-    date = {'year': 0, 'month': 0, 'day': 0, 'hour': 0, 'minute': 0}
+    year = ""
+    month = ""
+    day = ""
     while(True):
         line = f.readline()
         if not line:
@@ -32,9 +17,9 @@ def parseData(target):
         if(line[0] == '-') :
             splitLine=line.split(" ")
             #print(splitLine)
-            date['year'] = int(splitLine[1][:len(splitLine[1])-1])
-            date['month'] = int(splitLine[2][:len(splitLine[2])-1])
-            date['day'] = int(splitLine[3][:len(splitLine[3])-1])
+            year = splitLine[1][:len(splitLine[1])-1]
+            month = splitLine[2][:len(splitLine[2])-1]
+            day = splitLine[3][:len(splitLine[3])-1]
         #[name] [time] speech
         elif(line[0] == '[') :    
             splitLine = line.split(']')
@@ -45,32 +30,40 @@ def parseData(target):
                 name = name[1:]
             time = splitLine[1].strip()[1:]
             [am, clock] = time.split(" ")
-            [hour, minute] = map(int, clock.split(":"))
-            if am =='오후' and hour != 12 :
-                hour += 12
-            elif am == '오전' and hour == 12 :
-                hour -= 12
-            date['hour'] = hour
-            date['minute'] = minute
-            newDate = {'year': date['year'], 'month' : date['month'], 'day': date['day'], 'hour' : hour, 'minute': minute}
-            newData = {'name': name, 'date': newDate, 'speech': speech}
+            [hour, minute] = clock.split(":")
+            if am =='오후' and hour != '12' :
+                hour = str(int(hour) + 12)
+            elif am == '오전' and hour == '12' :
+                hour = str(int(hour) - 12)
+            newTime = datetime.datetime.strptime('%s-%s-%s %s:%s' %(year, month, day, hour, minute), '%Y-%m-%d %H:%M')
+            newData = {'name': name, 'time': newTime, 'speech': speech}
             data.append(newData)
     f.close()
     return data
 #groupData {ID: conversations: timeStarted: timeEnded: size:}
 def groupData(data) :
-    groupedData = []
+    groupedData = {}
     groupID = 0
-    currDate = {'year': 0, 'month': 0, 'day': 0, 'hour': 0, 'minute': 0}
+    currTime = None
     for thisData in data :
-        if not similarDate(currDate, thisData['date']) :
-            groupID += 1
-        
-        currDate = thisData['date']
-        groupedData[groupID]
+        if currTime is None :
+            currTime = thisData['time']
+            groupedData[groupID] = []
+        else :
+            td = thisData['time'] - currTime
+            currTime = thisData['time']
+            #print(td)
+            if not(td.days == 0 and td.seconds <= 300) :
+                groupID += 1
+                groupedData[groupID] = []
 
+        #print(groupID)
+        groupedData[groupID].append(thisData)
+    return groupedData
 
 target = 'data2.txt'
 data = parseData(target)
-print(data)
-groupData(data)
+#print(data)
+groupedData = groupData(data)
+for key in groupedData.keys() :
+    print(len(groupedData[key]))
