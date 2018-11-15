@@ -1,5 +1,6 @@
 from string import ascii_uppercase
 import datetime
+import json
     
 
 def parseData(target):
@@ -13,6 +14,7 @@ def parseData(target):
         if not line:
             break
         #Parse
+        #--------------- Y M D ---------------
         #----- year month day dayOfWeek ---------
         if(line[0] == '-') :
             splitLine=line.split(" ")
@@ -53,7 +55,7 @@ def groupData(data) :
             td = thisData['time'] - currTime
             currTime = thisData['time']
             #print(td)
-            if not(td.days == 0 and td.seconds <= 300) :
+            if not(td.days == 0 and td.seconds <= 600) :
                 groupID += 1
                 groupedData[groupID] = []
 
@@ -61,9 +63,64 @@ def groupData(data) :
         groupedData[groupID].append(thisData)
     return groupedData
 
-target = 'data2.txt'
+def getNames(group) :
+    names = {}
+    for obj in group :
+        if obj['name'] in names :
+            names[obj['name']] += 1
+        else :
+            names[obj['name']] = 1
+    return names
+
+def getTimeDifferences(group) :
+    startTime = group[0]['time']
+    endTime = group[len(group)-1]['time']
+    recentTimes = {}
+    speechCounts = {}
+    timeDifferences = {}
+    for data in group :
+        name = data['name']
+        if not name in timeDifferences :
+            timeDifferences[name] = {}
+        if not name in speechCounts :
+            speechCounts[name] = 1
+
+        time = data['time']
+        recentTimes[name] = time
+        #To get speech count
+        speechCounts[name] += 1
+        #to get sum of time difference 
+        for other in recentTimes.keys() :
+            if other != name :
+                if other in  timeDifferences[name] :
+                    timeDifferences[name][other] += time - recentTimes[other]
+                else :
+                     timeDifferences[name][other] = time - recentTimes[other]
+            #print(timeDifferences[name])
+    for name in speechCounts.keys() :
+        for other in timeDifferences[name].keys() :
+            timeDifferences[name][other] = str(timeDifferences[name][other]/speechCounts[name])
+        #print(timeDifferences[name])
+    return speechCounts, timeDifferences
+
+
+
+
+
+target = 'data.txt'
 data = parseData(target)
 #print(data)
 groupedData = groupData(data)
 for key in groupedData.keys() :
-    print(len(groupedData[key]))
+    #print(len(groupedData[key]))
+    if(len(groupedData[key]) >= 7) :
+        print(str(key) + ": ")
+        speechCounts, timeDifferences = getTimeDifferences(groupedData[key])
+        print(timeDifferences)
+
+sc = open('speechCounts.json', 'w', encoding = 'utf-8')
+sc.write(json.dumps(speechCounts, indent=2))
+sc.close()
+td = open('timeDifferences.json', 'w', encoding = 'utf-8')
+td.write(json.dumps(timeDifferences, indent=2))
+td.close()
