@@ -14,8 +14,7 @@ def parseData(target):
         if not line:
             break
         #Parse
-        #--------------- Y M D ---------------
-        #----- year month day dayOfWeek ---------
+        #--------------- Y M D DOW ---------------
         if(line[0] == '-') :
             splitLine=line.split(" ")
             #print(splitLine)
@@ -73,8 +72,8 @@ def getNames(group) :
     return names
 
 def getTimeDifferences(group) :
-    startTime = group[0]['time']
-    endTime = group[len(group)-1]['time']
+    #startTime = group[0]['time']
+    #endTime = group[len(group)-1]['time']
     recentTimes = {}
     speechCounts = {}
     timeDifferences = {}
@@ -107,7 +106,7 @@ def getTimeDifferences(group) :
 
 
 
-target = 'data.txt'
+target = 'data2.txt'
 data = parseData(target)
 #print(data)
 groupedData = groupData(data)
