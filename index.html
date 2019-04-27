@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Infovis Project</title>
+    <style>
+        .mainChart {
+            display: inline-block;
+        }
+
+
+        .subChart {
+            display: inline-block;
+            float: left;
+            background-color: #D8D8D8;
+        }
+
+        .day {
+            fill: #fff;
+            stroke: #ccc;
+        }
+
+        .month {
+            fill: none;
+            stroke: #000;
+            stroke-width: 2px;
+        }
+        .selected {
+            fill: red;
+        }
+        .RdYlGn .q0-11 {
+            fill: rgb(165, 0, 38)
+        }
+
+        .RdYlGn .q1-11 {
+            fill: rgb(215, 48, 39)
+        }
+
+        .RdYlGn .q2-11 {
+            fill: rgb(244, 109, 67)
+        }
+
+        .RdYlGn .q3-11 {
+            fill: rgb(253, 174, 97)
+        }
+
+        .RdYlGn .q4-11 {
+            fill: rgb(254, 224, 139)
+        }
+
+        .RdYlGn .q5-11 {
+            fill: rgb(255, 255, 191)
+        }
+
+        .RdYlGn .q6-11 {
+            fill: rgb(217, 239, 139)
+        }
+
+        .RdYlGn .q7-11 {
+            fill: rgb(166, 217, 106)
+        }
+
+        .RdYlGn .q8-11 {
+            fill: rgb(102, 189, 99)
+        }
+
+        .RdYlGn .q9-11 {
+            fill: rgb(26, 152, 80)
+        }
+
+        .RdYlGn .q10-11 {
+            fill: rgb(0, 104, 55)
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id='upperTab'>
+        <div class = 'mainChart'>
+            <div id="calendar" ></div>
+            <div id="overview" > </div>
+        </div>
+        <div class='mainChart'>
+            <div id='legend'></div>
+            <div id='pie'></div>
+        </div>
+    </div>
+
+    </div>
+
+    <div id='lowerTab'>
+
+        <div id='cloud' class='subChart'></div>
+        <div id='speeches' class='subChart'></div>
+        <div id='heatmap' class='subChart'></div>
+    </div>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="d3.layout.cloud.js"></script>
+    <script>
+        // default settings
+        let data = [];
+        let calendarWidth = 960,
+            calendarHeight = 136,
+            cellSize = 17; // cell size
+        let svgOverHeight = 100
+        let svgOverWidth = 960
+        let svgDetailHeight = 400
+        let svgDetailWidth = 960
+        let svgLegendWidth = 200;
+        let svgLegendHeight = 200;
+        let svgCloudWidth = 400;
+        let svgCloudHeight = 300;
+        let svgForceWidth = 400;
+        let svgForceHeight = 400;
+        let svgHeatmapWidth = 600;
+        let svgHeatmapHeight = 300;
+
+        let margin = {
+            top: 30,
+            right: 10,
+            bottom: 20,
+            left: 40,
+            mid: 10
+        };
+        let colorStack = function (i) {
+            return d3.interpolateSinebow(15 * i / 101);
+        }
+
+        let colorWord = function (i) {
+            return d3.interpolateSinebow(29 * i / 101);
+        }
+        let timeFormat = d3.timeFormat("%Y-%m-%d %H:%M:%S");
+
+        let overHeight = svgOverHeight - margin.top - margin.bottom;
+        let overWidth = svgOverWidth - margin.left - margin.right;
+        let detailHeight = svgDetailHeight - margin.top - margin.bottom;
+        let detailWidth = svgDetailWidth - margin.left - margin.right;
+        let legendHeight = svgLegendHeight - margin.top - margin.bottom;
+        let legendWidth = svgLegendWidth - margin.left - margin.right;
+        let cloudHeight = svgCloudHeight - margin.top - margin.bottom;
+        let cloudWidth = svgCloudWidth - margin.left - margin.right;
+        let forceHeight = svgForceHeight - margin.top - margin.bottom;
+        let forceWidth = svgForceWidth - margin.left - margin.right;
+        let heatmapHeight = svgHeatmapHeight - margin.top - margin.bottom;
+        let heatmapWidth = svgHeatmapWidth - margin.left - margin.right;
+
+        function translate(x, y) {
+            return 'translate(' + x + ',' + y + ')';
+        }
+        let svgLegend = d3.select('#legend').append('svg')
+            .attr('width', svgLegendWidth)
+            .attr('height', svgLegendHeight)
+            .append('g')
+            .attr('transform', translate(margin.left, margin.top));
+
+        function initLegend(names) {
+            svgLegend.selectAll('*').remove();
+            let legends = svgLegend.selectAll('nameLegend')
+                .data(names)
+                .enter()
+                .append('g')
+                .attr('class', 'nameLegend')
+                .attr('transform', (d, i) => translate(0, i * 20));
+
+            legends.append('rect')
+                .attr('x', 0)
+                .attr('y', 0)
+                .attr('width', 10)
+                .attr('height', 10)
+                .style('fill', (d, i) => d3.schemeAccent[i]);
+
+            legends.append('text')
+                .attr('x', 20)
+                .attr('y', 10)
+                .text(d => d);
+
+
+        }
+    </script>
+
+    <script src='pieChart.js'></script>
+    <script src='wordCloud.js'></script>
+    <script src='heatMap.js'></script>
+
+
+    <script src='detailOverview.js'></script>
+    <script src='calendar.js'></script>
+    <script>
+        // set the colors
+
+
+        // load the csv and create the chart
+        d3.json("parseResult.json").then(function (newData) {
+            data = newData
+            console.log(data);
+            //newData.slice(newData.length - 50, newData.length-1);
+            initCalendar(data);
+
+            //initLegend(names);
+        });
+    </script>
+</body>
+
+</html>

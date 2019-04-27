@@ -1,0 +1,126 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Infovis Project</title>
+    <style>
+      
+    </style>
+</head>
+
+<body>
+    <div id='leftTab' style='float:left'>
+        <div id="overview" style='float:left'></div>
+        <div id='controller'>
+            <button id='prev'>prev</button>
+            <p id='from'>from </p>
+            <p id='to'>to</p>
+            <select id='index'> </select>
+            <p id='total'>of total</p>
+            <button id='next'>next</button>
+
+        </div>
+    </div>
+    <div id='detail' style='float:left'>
+        <div id='legend' style='float:left'></div>
+        <div id='cloud' style='float:left'></div>
+        <div id='force' style='float:left'></div>
+    </div>
+    <script src="{{ url_for('static',filename='javascripts/d3.min.js') }}" ></script>
+    <script src="{{ url_for('static',filename='javascripts/d3.layout.cloud.js') }}"></script>
+
+    <script>
+        // default settings
+        let data = [];
+        let svgOverHeight = 150
+        let svgOverWidth = 1200
+        let svgDetailHeight = 450
+        let svgDetailWidth = 1200
+        let svgLegendWidth = 150;
+        let svgLegendHeight = 800;
+        let svgCloudWidth = 500;
+        let svgCloudHeight = 400;
+        let svgForceWidth = 500;
+        let svgForceHeight = 400;
+
+        let margin = {
+            top: 30,
+            right: 10,
+            bottom: 20,
+            left: 40,
+            mid: 10
+        };
+        let colorStack = function (i) {
+            return d3.interpolateSinebow(15 * i / 101);
+        }
+
+        let colorWord = function (i) {
+            return d3.interpolateSinebow(29 * i / 101);
+        }
+        let timeFormat = d3.timeFormat("%Y-%m-%d %H:%M:%S");
+
+        let overHeight = svgOverHeight - margin.top - margin.bottom;
+        let overWidth = svgOverWidth - margin.left - margin.right;
+        let detailHeight = svgDetailHeight - margin.top - margin.bottom;
+        let detailWidth = svgDetailWidth - margin.left - margin.right;
+        let legendHeight = svgLegendHeight - margin.top - margin.bottom;
+        let legendWidth = svgLegendWidth - margin.left - margin.right;
+        let cloudHeight = svgCloudHeight - margin.top - margin.bottom;
+        let cloudWidth = svgCloudWidth - margin.left - margin.right;
+        let forceHeight = svgForceHeight - margin.top - margin.bottom;
+        let forceWidth = svgForceWidth - margin.left - margin.right;
+
+        function translate(x, y) {
+            return 'translate(' + x + ',' + y + ')';
+        }
+        let svgLegend = d3.select('#legend').append('svg')
+            .attr('width', svgLegendWidth)
+            .attr('height', svgLegendHeight)
+            .append('g')
+            .attr('transform', translate(margin.left, margin.top));
+
+        function initLegend(names) {
+            svgLegend.selectAll('*').remove();
+            let legends = svgLegend.selectAll('nameLegend')
+                .data(names)
+                .enter()
+                .append('g')
+                .attr('class', 'nameLegend')
+                .attr('transform', (d, i) => translate(0, i * 20));
+
+            legends.append('rect')
+                .attr('x', 0)
+                .attr('y', 0)
+                .attr('width', 10)
+                .attr('height', 10)
+                .style('fill', (d, i) => d3.schemeAccent[i]);
+
+            legends.append('text')
+                .attr('x', 20)
+                .attr('y', 10)
+                .text(d => d);
+
+
+        }
+    </script>
+
+    <script src="{{ url_for('static',filename='javascripts/forceGraph.js') }}"></script>
+    <script src="{{ url_for('static',filename='javascripts/wordCloud.js') }}"></script>
+    <script src="{{ url_for('static',filename='javascripts/detailOverview.js') }}"></script>
+
+    <script>
+        // set the colors
+
+
+        // load the csv and create the chart
+        d3.json("parseResult.json").then(function (newData) {
+            data = newData
+            console.log(data);
+            //newData.slice(newData.length - 50, newData.length-1);
+            initOverview(data);
+            //initLegend(names);
+        });
+    </script>
+</body>
+</html>
